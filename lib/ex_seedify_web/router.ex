@@ -18,6 +18,8 @@ defmodule ExSeedifyWeb.Router do
     pipe_through :api
 
     get "/", PageController, :ping
+    get "/users", UserController, :list_users
+    post "/invite-users", UserController, :invite_users
   end
 
   # Other scopes may use custom stacks.

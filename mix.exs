@@ -44,7 +44,10 @@ defmodule ExSeedify.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:scrivener_ecto, "~> 2.7"},
+      {:typed_ecto_schema, "~> 0.4.1", runtime: false},
+      {:benchee, "~> 1.3", only: :dev}
     ]
   end
 
@@ -57,7 +60,7 @@ defmodule ExSeedify.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "ecto.setup"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+      "ecto.setup": ["ecto.create", "ecto.migrate", "seed_data"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]

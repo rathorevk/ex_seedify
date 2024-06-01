@@ -25,3 +25,6 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# Configure supported currencies
+config :ex_seedify, currencies: [:USD, :EUR, :JPY, :GBP]

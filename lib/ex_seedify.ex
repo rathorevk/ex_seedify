@@ -9,6 +9,61 @@ defmodule ExSeedify do
 
   @names ExSeedify.Services.ListNamesFromFile.call()
 
+  alias ExSeedify.Schema.User
+  alias ExSeedify.Users
+
+  require Logger
+
+  # =======================================================================
+  # Macros
+  # =======================================================================
+  @retries 3
+  @max_concurrency System.schedulers_online()
+
+  # =======================================================================
+  # Public APIs
+  # =======================================================================
+  @spec list_users_with_salaries(Users.filter_params(), Users.paginate_opts()) ::
+          Scrivener.Page.t()
+  defdelegate list_users_with_salaries(filter_params, paginate_opts), to: Users
+
+  @doc """
+  Send async email invitation to all users with active salary.
+  if failed retry attempt as configured.
+  """
+  @spec invite_users() :: :ok
+  def invite_users do
+    Users.fetch_users_with_active_salary()
+    |> Task.async_stream(&send_invitation/1, ordered: false, max_concurrency: @max_concurrency)
+    |> Stream.run()
+  end
+
+  # =======================================================================
+  # Private Functions
+  # =======================================================================
+  defp send_invitation(%User{name: name} = user, retries \\ @retries) do
+    %{name: name}
+    |> send_email()
+    |> handle_response(user, retries)
+  end
+
+  defp handle_response({:ok, _user}, %User{id: id}, _retry) do
+    Logger.info("Successfully sent invitation to user: #{id}!")
+  end
+
+  defp handle_response({:error, error}, %User{id: id}, 0 = _retry) do
+    Logger.error("Exhausted retry invite attempts to user: #{id}, error: #{inspect(error)}!")
+    :ok
+  end
+
+  defp handle_response({:error, error}, %User{id: id} = user, retry) do
+    Logger.info(
+      "User #{id} invitation failed with error: #{inspect(error)} retry attempt left: #{retry}!"
+    )
+
+    send_invitation(user, retry - 1)
+  end
+
   @doc """
   Sends an email to a user.
 
