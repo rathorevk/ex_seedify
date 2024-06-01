@@ -28,7 +28,7 @@ defmodule ExSeedify.Users do
   ## Examples
 
       iex> list_users_with_salaries()
-      Scrivener.Page{entries: [%User{id: 1001, name: "Joe", active_salary: %Salary{}, ...}, ...]}
+      Scrivener.Page{entries: [%{user: %User{id: 1001, name: "Joe", salary: %Salary{}}, ...]}
   """
   @spec list_users_with_salaries(filter_params(), paginate_opts()) :: Scrivener.Page.t()
   def list_users_with_salaries(filter_params \\ %{}, paginate_opts \\ %{}) do
@@ -39,31 +39,6 @@ defmodule ExSeedify.Users do
     |> Repo.paginate(paginate_opts)
   end
 
-  # def get_users_with_recent_salaries_query do
-  #   # def user_salary_subquery do
-  #   #   from(s in Salary, order_by: [desc: s.active, desc: s.updated_at], distinct: s.user_id)
-  #   # end
-  #   recent_salaries_subquery =
-  #     from s in Salary,
-  #       order_by: [desc: s.active, desc: s.updated_at],
-  #       distinct: s.user_id,
-  #       select: %{
-  #         id: s.id,
-  #         user_id: s.user_id,
-  #         amount: s.amount,
-  #         active: s.active,
-  #         updated_at: s.updated_at
-  #       }
-
-  #   query =
-  #     from u in User,
-  #       join: s in subquery(recent_salaries_subquery),
-  #       on: s.user_id == u.id,
-  #       select: %{user: u, salary: s}
-
-  #   Repo.all(query, limit: 30)
-  # end
-
   @doc """
   Returns the list of users with active salary.
 
@@ -72,13 +47,13 @@ defmodule ExSeedify.Users do
       iex> fetch_users_with_active_salary()
       [%User{id: 1001, name: "Joe", active_salary: %Salary{}, ...}, ...]
   """
-  @spec fetch_users_with_active_salary() :: [User.t()]
+  @spec fetch_users_with_active_salary() :: Enum.t()
   def fetch_users_with_active_salary do
     User
     |> join(:left, [u], s in Salary, on: u.id == s.user_id)
     |> where([u, s], s.active == true)
-    |> select_merge([_u, s], %{active_salary: s})
-    |> Repo.all()
+    |> select([u, s], %{user: u, salary: s})
+    |> Repo.stream()
   end
 
   @doc """

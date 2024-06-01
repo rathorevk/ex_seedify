@@ -18,7 +18,6 @@ defmodule ExSeedify do
   # Macros
   # =======================================================================
   @retries 3
-  @max_concurrency System.schedulers_online()
 
   # =======================================================================
   # Public APIs
@@ -33,15 +32,19 @@ defmodule ExSeedify do
   """
   @spec invite_users() :: :ok
   def invite_users do
-    Users.fetch_users_with_active_salary()
-    |> Task.async_stream(&send_invitation/1, ordered: false, max_concurrency: @max_concurrency)
-    |> Stream.run()
+    ExSeedify.Repo.transaction(fn ->
+      Users.fetch_users_with_active_salary()
+      |> Stream.each(&send_invitation/1)
+      |> Stream.run()
+    end)
+
+    :ok
   end
 
   # =======================================================================
   # Private Functions
   # =======================================================================
-  defp send_invitation(%User{name: name} = user, retries \\ @retries) do
+  defp send_invitation(%{user: %User{name: name} = user}, retries \\ @retries) do
     %{name: name}
     |> send_email()
     |> handle_response(user, retries)
