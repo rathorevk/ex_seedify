@@ -77,7 +77,7 @@ defmodule ExSeedifyWeb.UserControllerTest do
     end
   end
 
-  defp create_user(attrs \\ %{}) do
+  defp create_user(attrs) do
     user = user_fixture(attrs)
     salary = salary_fixture(%{user_id: user.id})
 
