@@ -1,3 +1,5 @@
+![Build Status](https://github.com/rathorevk/ex_seedify/actions/workflows/ci.yaml/badge.svg?branch=main)
+
 # ExSeedify: A Seeder Application
 
 Create a Phoenix application and implement features to seed data and send email.
